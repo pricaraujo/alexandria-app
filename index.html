@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Alexandria</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+
+            <img src="assets/logo.png" class="logo">
+
+            <h1>Let's personalize your parenting journey</h1>
+
+            <p>
+
+                Alexandria provides trusted recommendations based on
+                NHS and UNICEF guidance.
+
+            </p>
+
+        </header>
+
+        <section class="card">
+
+            <h2>Are you currently pregnant?</h2>
+
+            <div class="buttons">
+
+                <button id="pregnantBtn">
+
+                    Yes
+
+                </button>
+
+                <button id="parentBtn">
+
+                    No
+
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- Pregnancy -->
+
+        <section id="pregnancyForm" class="hidden card">
+
+            <h2>How many weeks pregnant are you?</h2>
+
+            <input
+                type="number"
+                id="weeks"
+                placeholder="Example: 24">
+
+            <button onclick="showPregnancyAdvice()">
+
+                Continue
+
+            </button>
+
+        </section>
+
+        <!-- Children -->
+
+        <section id="childrenForm" class="hidden card">
+
+            <h2>Tell us about your children</h2>
+
+            <label>
+
+                Number of children
+
+            </label>
+
+            <input
+                type="number"
+                id="children"
+                min="1"
+                max="6">
+
+            <button onclick="generateChildrenInputs()">
+
+                Next
+
+            </button>
+
+            <div id="childrenContainer"></div>
+
+        </section>
+
+        <!-- Results -->
+
+        <section
+            id="results"
+            class="hidden card">
+
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

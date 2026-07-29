@@ -1,68 +1,246 @@
-const pregnantBtn = document.getElementById("pregnantBtn");
-const parentBtn = document.getElementById("parentBtn");
+/* =======================================================
+   Alexandria Prototype
+   Part 1
+======================================================= */
 
-const pregnancyForm = document.getElementById("pregnancyForm");
-const childrenForm = document.getElementById("childrenForm");
-const childrenContainer = document.getElementById("childrenContainer");
-const results = document.getElementById("results");
+const STORAGE_KEY = "alexandria_user";
 
-pregnantBtn.onclick = () => {
+/* =======================================================
+   Helpers
+======================================================= */
 
-    pregnancyForm.classList.remove("hidden");
-    childrenForm.classList.add("hidden");
-    results.classList.add("hidden");
+function saveUser(user){
 
-};
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(user)
+    );
 
-parentBtn.onclick = () => {
+}
 
-    childrenForm.classList.remove("hidden");
-    pregnancyForm.classList.add("hidden");
-    results.classList.add("hidden");
+function getUser(){
 
-};
+    const data = localStorage.getItem(STORAGE_KEY);
 
-function generateChildrenInputs(){
+    if(!data) return null;
 
-    childrenContainer.innerHTML="";
+    return JSON.parse(data);
 
-    const quantity = parseInt(document.getElementById("children").value);
+}
 
-    if(!quantity || quantity<1){
+function logout(){
 
-        alert("Please enter the number of children.");
+    localStorage.removeItem(STORAGE_KEY);
+
+    location.reload();
+
+}
+
+/* =======================================================
+   Default User
+======================================================= */
+
+function createEmptyUser(){
+
+    return{
+
+        logged:true,
+
+        email:"",
+
+        xp:0,
+
+        streak:0,
+
+        pregnant:false,
+
+        pregnancyWeek:null,
+
+        children:[],
+
+        badges:[],
+
+        completedToday:false
+
+    }
+
+}
+
+/* =======================================================
+   Login
+======================================================= */
+
+function login(){
+
+    const email=document
+        .getElementById("email")
+        .value;
+
+    const password=document
+        .getElementById("password")
+        .value;
+
+    if(email==="" || password===""){
+
+        alert("Please enter email and password.");
 
         return;
 
     }
 
-    for(let i=1;i<=quantity;i++){
+    let user=createEmptyUser();
 
-        childrenContainer.innerHTML += `
+    user.email=email;
+
+    saveUser(user);
+
+    openOnboarding();
+
+}
+
+/* =======================================================
+   Initial Load
+======================================================= */
+
+window.onload=function(){
+
+    const user=getUser();
+
+    if(!user){
+
+        document
+            .getElementById("loginScreen")
+            .classList.remove("hidden");
+
+        return;
+
+    }
+
+    if(user.children.length===0 && !user.pregnant){
+
+        openOnboarding();
+
+        return;
+
+    }
+
+    openDashboard();
+
+}
+
+/* =======================================================
+   Screens
+======================================================= */
+
+function hideAllScreens(){
+
+    document
+        .getElementById("loginScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("onboardingScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("dashboard")
+        .classList.add("hidden");
+
+}
+
+function openOnboarding(){
+
+    hideAllScreens();
+
+    document
+        .getElementById("onboardingScreen")
+        .classList.remove("hidden");
+
+}
+
+function openDashboard(){
+
+    hideAllScreens();
+
+    document
+        .getElementById("dashboard")
+        .classList.remove("hidden");
+
+    loadDashboard();
+
+}
+
+/* =======================================================
+   Pregnancy
+======================================================= */
+
+function pregnantYes(){
+
+    document
+        .getElementById("pregnancyQuestions")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("childrenQuestions")
+        .classList.add("hidden");
+
+}
+
+function pregnantNo(){
+
+    document
+        .getElementById("childrenQuestions")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("pregnancyQuestions")
+        .classList.add("hidden");
+
+}
+
+/* =======================================================
+   Children
+======================================================= */
+
+function createChildrenInputs(){
+
+    const total=parseInt(
+        document
+        .getElementById("childrenNumber")
+        .value
+    );
+
+    const div=document
+        .getElementById("childrenForms");
+
+    div.innerHTML="";
+
+    if(!total || total<=0){
+
+        return;
+
+    }
+
+    for(let i=0;i<total;i++){
+
+        div.innerHTML+=`
 
         <div class="child-card">
 
-            <h3>Child ${i}</h3>
+            <h4>
 
-            <label>Age</label>
+                Child ${i+1}
 
-            <select id="age${i}">
+            </h4>
 
-                <option value="0">0-12 months</option>
+            <input
+                id="childName${i}"
+                placeholder="Name">
 
-                <option value="1">1 year</option>
-
-                <option value="2">2 years</option>
-
-                <option value="3">3 years</option>
-
-                <option value="4">4 years</option>
-
-                <option value="5">5 years</option>
-
-                <option value="6">6 years</option>
-
-            </select>
+            <input
+                id="childAge${i}"
+                type="number"
+                placeholder="Age">
 
         </div>
 
@@ -70,276 +248,511 @@ function generateChildrenInputs(){
 
     }
 
-    childrenContainer.innerHTML += `
+}
 
-    <button onclick="showChildrenAdvice()">
+/* =======================================================
+   Finish Onboarding
+======================================================= */
 
-        Generate recommendations
+function finishOnboarding(){
 
-    </button>
+    let user=getUser();
 
-    `;
+    if(!user){
+
+        user=createEmptyUser();
+
+    }
+
+    const week=document
+        .getElementById("weeks")
+        .value;
+
+    if(week){
+
+        user.pregnant=true;
+
+        user.pregnancyWeek=parseInt(week);
+
+    }
+
+    const total=parseInt(
+        document
+        .getElementById("childrenNumber")
+        .value
+    );
+
+    user.children=[];
+
+    if(total){
+
+        for(let i=0;i<total;i++){
+
+            const child={
+
+                name:document
+                    .getElementById(`childName${i}`)
+                    .value,
+
+                age:parseInt(
+
+                    document
+                    .getElementById(`childAge${i}`)
+                    .value
+
+                ),
+
+                xp:0
+
+            };
+
+            user.children.push(child);
+
+        }
+
+    }
+
+    saveUser(user);
+
+    openDashboard();
 
 }
 
-function showPregnancyAdvice(){
+/* =======================================================
+   Navigation
+======================================================= */
 
-    const weeks = parseInt(document.getElementById("weeks").value);
+function showTab(tab){
 
-    let advice=[];
+    document
+        .querySelectorAll(".tab")
+        .forEach(item=>{
 
-    if(weeks<=12){
+            item.classList.add("hidden");
 
-        advice=[
+        });
 
-            "Take folic acid daily.",
+    document
+        .getElementById(tab)
+        .classList.remove("hidden");
 
-            "Book your first antenatal appointment.",
+}
+// =========================
+// ONBOARDING
+// =========================
 
-            "Avoid alcohol and smoking.",
+const startBtn = document.getElementById("startBtn");
 
-            "Eat a balanced diet."
+startBtn.onclick = () => {
 
-        ];
+    const profile = {
+        pregnant: document.querySelector('input[name="pregnant"]:checked')?.value || "no",
+        pregnancyWeeks: document.getElementById("pregnancyWeeks").value,
+        children: []
+    };
+
+    document.querySelectorAll(".child-card").forEach(card=>{
+
+        profile.children.push({
+
+            name: card.querySelector(".child-name").value,
+            age: card.querySelector(".child-age").value
+
+        });
+
+    });
+
+    localStorage.setItem(
+        "alex_profile",
+        JSON.stringify(profile)
+    );
+
+    initializeDashboard(profile);
+
+};
+
+
+
+// =========================
+// LOAD USER
+// =========================
+
+window.onload = ()=>{
+
+    if(localStorage.getItem("alex_logged")){
+
+        const profile = JSON.parse(
+            localStorage.getItem("alex_profile")
+        );
+
+        if(profile){
+
+            initializeDashboard(profile);
+
+        }else{
+
+            showOnboarding();
+
+        }
 
     }
 
-    else if(weeks<=27){
+};
 
-        advice=[
 
-            "Monitor baby's movements.",
 
-            "Maintain moderate physical activity.",
 
-            "Stay hydrated.",
+// =========================
+// XP
+// =========================
 
-            "Attend routine prenatal visits."
+let xp = Number(localStorage.getItem("alex_xp")) || 0;
 
-        ];
+function addXP(points){
 
-    }
+    xp += points;
 
-    else{
+    localStorage.setItem("alex_xp",xp);
 
-        advice=[
-
-            "Prepare your birth plan.",
-
-            "Learn breastfeeding basics.",
-
-            "Pack your hospital bag.",
-
-            "Know the signs of labour."
-
-        ];
-
-    }
-
-    results.classList.remove("hidden");
-
-    results.innerHTML=`
-
-    <div class="result-card">
-
-        <span class="badge">
-
-            Pregnancy • ${weeks} weeks
-
-        </span>
-
-        <h3>Your recommendations</h3>
-
-        <ul>
-
-            ${advice.map(item=>`<li>${item}</li>`).join("")}
-
-        </ul>
-
-        <div class="progress">
-
-            <div class="progress-bar" style="width:${Math.min((weeks/40)*100,100)}%"></div>
-
-        </div>
-
-        <div class="xp">
-
-            ⭐ +25 XP earned
-
-        </div>
-
-    </div>
-
-    `;
+    updateXP();
 
 }
 
-function getAdvice(age){
+function updateXP(){
 
-    switch(age){
-
-        case 0:
-
-            return [
-
-                "Practice skin-to-skin contact.",
-
-                "Breastfeed on demand when possible.",
-
-                "Follow the immunization schedule.",
-
-                "Talk and sing to your baby daily."
-
-            ];
-
-        case 1:
-
-            return [
-
-                "Encourage crawling and walking.",
-
-                "Read together every day.",
-
-                "Offer a variety of healthy foods.",
-
-                "Reduce screen exposure."
-
-            ];
-
-        case 2:
-
-            return [
-
-                "Support language development.",
-
-                "Encourage pretend play.",
-
-                "Maintain healthy sleep routines.",
-
-                "Promote independent eating."
-
-            ];
-
-        case 3:
-
-            return [
-
-                "Practice counting and colours.",
-
-                "Play outdoors every day.",
-
-                "Read bedtime stories.",
-
-                "Develop emotional vocabulary."
-
-            ];
-
-        case 4:
-
-            return [
-
-                "Stimulate creativity through drawing.",
-
-                "Encourage friendships.",
-
-                "Practice sharing.",
-
-                "Keep routines consistent."
-
-            ];
-
-        case 5:
-
-            return [
-
-                "Prepare for school.",
-
-                "Promote physical activity.",
-
-                "Develop responsibility through small tasks.",
-
-                "Continue reading together."
-
-            ];
-
-        default:
-
-            return [
-
-                "Encourage curiosity.",
-
-                "Support literacy skills.",
-
-                "Promote independence.",
-
-                "Celebrate achievements."
-
-            ];
-
-    }
+    document.getElementById("xpValue").innerHTML = xp;
 
 }
 
-function showChildrenAdvice(){
 
-    const quantity=parseInt(document.getElementById("children").value);
 
-    results.classList.remove("hidden");
+// =========================
+// DASHBOARD
+// =========================
 
-    results.innerHTML="";
+function initializeDashboard(profile){
 
-    for(let i=1;i<=quantity;i++){
+    onboarding.classList.add("hidden");
 
-        const age=parseInt(document.getElementById(`age${i}`).value);
+    dashboard.classList.remove("hidden");
 
-        const advice=getAdvice(age);
+    updateXP();
 
-        results.innerHTML += `
+    generateDailyPlan(profile);
 
-        <div class="result-card">
+    generateInstitutions();
 
-            <span class="badge">
+}
+// =========================
+// DAILY PLAN
+// =========================
 
-                Child ${i}
+function generateDailyPlan() {
 
-            </span>
+    const container = document.getElementById("dailyPlan");
 
-            <h3>${age} year${age!==1?"s":""}</h3>
+    container.innerHTML = "";
 
-            <ul>
+    let plan = [];
 
-                ${advice.map(item=>`<li>${item}</li>`).join("")}
+    children.forEach(child => {
 
-            </ul>
+        if(child.age == 0){
 
-            <div class="progress">
+            plan.push({
+                child: child.name,
+                tasks:[
+                    "Read a short picture book (10 min)",
+                    "Tummy time",
+                    "Talk and sing during feeding"
+                ]
+            });
 
-                <div class="progress-bar" style="width:${(age/6)*100}%"></div>
+        }else if(child.age <= 2){
 
-            </div>
+            plan.push({
+                child: child.name,
+                tasks:[
+                    "Read together",
+                    "Stack blocks",
+                    "Outdoor walk",
+                    "Name everyday objects"
+                ]
+            });
 
-            <div class="tip">
+        }else if(child.age <=4){
 
-                📌 Based on trusted NHS & UNICEF parenting guidance.
+            plan.push({
+                child: child.name,
+                tasks:[
+                    "Pretend play",
+                    "Read a story",
+                    "Count objects",
+                    "Nature walk"
+                ]
+            });
 
-            </div>
+        }else{
 
-            <div class="xp">
+            plan.push({
+                child: child.name,
+                tasks:[
+                    "Practice letters",
+                    "Drawing activity",
+                    "Bike or park",
+                    "Read for 15 minutes"
+                ]
+            });
 
-                ⭐ +50 XP earned
+        }
 
-            </div>
+    });
 
-        </div>
+    if(plan.length == 0){
+
+        container.innerHTML = `
+            <p>Add your child first.</p>
+        `;
+
+        return;
+
+    }
+
+    plan.forEach(p=>{
+
+        let html = `
+        <div class="plan-card">
+
+            <h3>${p.child}</h3>
 
         `;
 
-    }
+        p.tasks.forEach(task=>{
 
-    results.scrollIntoView({
+            html += `
+                <label class="task">
 
-        behavior:"smooth"
+                    <input type="checkbox">
+
+                    ${task}
+
+                </label>
+            `;
+
+        });
+
+        html += `
+            <button onclick="completeDay()">Complete Today (+50 XP)</button>
+        </div>
+        `;
+
+        container.innerHTML += html;
 
     });
 
 }
+
+
+// =========================
+// COMPLETE DAY
+// =========================
+
+function completeDay(){
+
+    xp += 50;
+
+    saveXP();
+
+    updateXP();
+
+    alert("Awesome! +50 XP earned 🎉");
+
+}
+
+
+// =========================
+// NEARBY SERVICES
+// =========================
+
+const nearby = [
+
+    {
+        type:"Hospital",
+        name:"NHS Community Health Centre",
+        desc:"Pediatric consultations and vaccinations."
+    },
+
+    {
+        type:"NGO",
+        name:"Family Support Hub",
+        desc:"Parenting workshops and child development."
+    },
+
+    {
+        type:"Event",
+        name:"Storytelling Saturday",
+        desc:"Weekly reading activities for children."
+    },
+
+    {
+        type:"Park",
+        name:"Community Green Park",
+        desc:"Outdoor play and social interaction."
+    }
+
+];
+
+function renderNearby(){
+
+    const container = document.getElementById("nearbyList");
+
+    container.innerHTML = "";
+
+    nearby.forEach(item=>{
+
+        container.innerHTML += `
+
+        <div class="near-card">
+
+            <h3>${item.type}</h3>
+
+            <strong>${item.name}</strong>
+
+            <p>${item.desc}</p>
+
+            <button onclick="earnPartnerXP()">
+
+                I visited (+20 XP)
+
+            </button>
+
+        </div>
+
+        `;
+
+    });
+
+}
+
+function earnPartnerXP(){
+
+    xp += 20;
+
+    saveXP();
+
+    updateXP();
+
+}
+
+
+// =========================
+// NHS RESOURCES
+// =========================
+
+const resources = [
+
+    {
+        title:"Pregnancy",
+        url:"https://www.nhs.uk/pregnancy/"
+    },
+
+    {
+        title:"Baby",
+        url:"https://www.nhs.uk/start-for-life/"
+    },
+
+    {
+        title:"Child Development",
+        url:"https://www.nhs.uk/conditions/baby/"
+    },
+
+    {
+        title:"Vaccinations",
+        url:"https://www.nhs.uk/vaccinations/"
+    }
+
+];
+
+function renderResources(){
+
+    const container = document.getElementById("resources");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    resources.forEach(r=>{
+
+        container.innerHTML += `
+
+        <div class="resource">
+
+            <h3>${r.title}</h3>
+
+            <a href="${r.url}" target="_blank">
+
+                Open NHS Guide →
+
+            </a>
+
+        </div>
+
+        `;
+
+    });
+
+}
+
+
+// =========================
+// TABS
+// =========================
+
+function showTab(tab){
+
+    document.querySelectorAll(".tab-content").forEach(el=>{
+
+        el.classList.add("hidden");
+
+    });
+
+    document.getElementById(tab).classList.remove("hidden");
+
+}
+
+
+// =========================
+// INIT
+// =========================
+
+window.onload = () => {
+
+    updateXP();
+
+    if(localStorage.getItem("alex_logged")){
+
+        if(localStorage.getItem("alex_profile")){
+
+            loginPage.classList.add("hidden");
+
+            onboarding.classList.add("hidden");
+
+            dashboard.classList.remove("hidden");
+
+        }else{
+
+            showOnboarding();
+
+        }
+
+    }
+
+    loadChildren();
+
+    generateDailyPlan();
+
+    renderNearby();
+
+    renderResources();
+
+};

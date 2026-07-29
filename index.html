@@ -4,53 +4,92 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Alexandria</title>
 
     <link rel="stylesheet" href="style.css">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
 </head>
 
 <body>
 
-    <div class="container">
+<div class="app">
 
-        <header>
+    <!-- ================= LOGIN ================= -->
 
-            <img src="logo.jpg" class="logo">
+    <section id="loginScreen" class="screen">
 
-            <h1>Let's personalize your parenting journey</h1>
+        <div class="card login-card">
+
+            <img src="logo.png" class="logo">
+
+            <h1>Welcome to Alexandria</h1>
+
+            <p>
+                Personalized Parenting Guidance
+            </p>
+
+            <input
+                id="email"
+                type="email"
+                placeholder="Email">
+
+            <input
+                id="password"
+                type="password"
+                placeholder="Password">
+
+            <button onclick="login()">
+
+                Continue
+
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- ================= ONBOARD ================= -->
+
+    <section id="onboardingScreen"
+        class="screen hidden">
+
+        <div class="card">
+
+            <h2>
+
+                Let's personalize your parenting journey
+
+            </h2>
 
             <p>
 
-                Alexandria provides trusted recommendations based on
-                NHS and UNICEF guidance.
+                Alexandria provides personalized guidance
+                based on NHS and UNICEF recommendations.
 
             </p>
 
-        </header>
+            <h3>
 
-        <section class="card">
+                Are you currently pregnant?
 
-            <h2>Are you currently pregnant?</h2>
+            </h3>
 
-            <div class="buttons">
+            <div class="button-group">
 
-                <button id="pregnantBtn">
+                <button onclick="pregnantYes()">
 
                     Yes
 
                 </button>
 
-                <button id="parentBtn">
+                <button onclick="pregnantNo()">
 
                     No
 
@@ -58,66 +97,295 @@
 
             </div>
 
-        </section>
+            <!-- Pregnancy -->
 
-        <!-- Pregnancy -->
+            <div
+                id="pregnancyQuestions"
+                class="hidden">
 
-        <section id="pregnancyForm" class="hidden card">
+                <input
+                    id="weeks"
+                    type="number"
+                    placeholder="Pregnancy week">
 
-            <h2>How many weeks pregnant are you?</h2>
+            </div>
 
-            <input
-                type="number"
-                id="weeks"
-                placeholder="Example: 24">
+            <!-- Children -->
 
-            <button onclick="showPregnancyAdvice()">
+            <div
+                id="childrenQuestions"
+                class="hidden">
 
-                Continue
+                <input
+                    id="childrenNumber"
+                    type="number"
+                    placeholder="How many children?">
 
-            </button>
+                <button onclick="createChildrenInputs()">
 
-        </section>
+                    Continue
 
-        <!-- Children -->
+                </button>
 
-        <section id="childrenForm" class="hidden card">
+                <div id="childrenForms"></div>
 
-            <h2>Tell us about your children</h2>
+            </div>
 
-            <label>
+            <button
+                class="save-button"
+                onclick="finishOnboarding()">
 
-                Number of children
-
-            </label>
-
-            <input
-                type="number"
-                id="children"
-                min="1"
-                max="6">
-
-            <button onclick="generateChildrenInputs()">
-
-                Next
+                Finish
 
             </button>
 
-            <div id="childrenContainer"></div>
+        </div>
 
-        </section>
+    </section>
 
-        <!-- Results -->
+    <!-- ================= DASHBOARD ================= -->
+
+    <section
+        id="dashboard"
+        class="hidden">
+
+        <!-- Header -->
+
+        <header>
+
+            <div>
+
+                <h2>
+
+                    Alexandria
+
+                </h2>
+
+                <span>
+
+                    Personalized Parenting Guidance
+
+                </span>
+
+            </div>
+
+            <div class="xp-box">
+
+                ⭐ XP
+
+                <strong id="xp">
+
+                    0
+
+                </strong>
+
+            </div>
+
+        </header>
+
+        <!-- Navigation -->
+
+        <nav>
+
+            <button onclick="showTab('today')">
+
+                Today
+
+            </button>
+
+            <button onclick="showTab('community')">
+
+                Community
+
+            </button>
+
+            <button onclick="showTab('partners')">
+
+                Partners
+
+            </button>
+
+            <button onclick="showTab('profile')">
+
+                Profile
+
+            </button>
+
+        </nav>
+
+        <!-- TODAY -->
 
         <section
-            id="results"
-            class="hidden card">
+            id="today"
+            class="tab">
+
+            <div class="card">
+
+                <h2>
+
+                    Daily Parenting Plan
+
+                </h2>
+
+                <p>
+
+                    Tell us how your child is feeling today.
+
+                </p>
+
+                <select id="mood">
+
+                    <option>
+
+                        Happy
+
+                    </option>
+
+                    <option>
+
+                        Sick
+
+                    </option>
+
+                    <option>
+
+                        Tired
+
+                    </option>
+
+                    <option>
+
+                        Energetic
+
+                    </option>
+
+                </select>
+
+                <button onclick="generatePlan()">
+
+                    Generate Daily Plan
+
+                </button>
+
+            </div>
+
+            <div
+                id="dailyPlan"
+                class="card">
+
+            </div>
 
         </section>
 
-    </div>
+        <!-- COMMUNITY -->
 
-    <script src="script.js"></script>
+        <section
+            id="community"
+            class="tab hidden">
+
+            <div class="card">
+
+                <h2>
+
+                    Nearby Institutions
+
+                </h2>
+
+                <div id="institutions">
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- PARTNERS -->
+
+        <section
+            id="partners"
+            class="tab hidden">
+
+            <div class="card">
+
+                <h2>
+
+                    Alexandria Rewards
+
+                </h2>
+
+                <p>
+
+                    Earn XP every day.
+
+                </p>
+
+                <ul>
+
+                    <li>
+
+                        ✔ Complete today's checklist
+
+                    </li>
+
+                    <li>
+
+                        ✔ Answer questionnaires
+
+                    </li>
+
+                    <li>
+
+                        ✔ Attend partner events
+
+                    </li>
+
+                    <li>
+
+                        ✔ Visit recommended institutions
+
+                    </li>
+
+                </ul>
+
+                <br>
+
+                <p>
+
+                    Parents with higher XP receive exclusive discounts from Alexandria partners.
+
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- PROFILE -->
+
+        <section
+            id="profile"
+            class="tab hidden">
+
+            <div class="card">
+
+                <h2>
+
+                    My Family
+
+                </h2>
+
+                <div id="family">
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </section>
+
+</div>
+
+<script src="script.js"></script>
 
 </body>
 

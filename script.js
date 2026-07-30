@@ -1,180 +1,98 @@
-/* =======================================================
-   Alexandria Prototype
-   Part 1
-======================================================= */
+// ========================================
+// ALEXANDRIA MVP
+// PART 1 - LOGIN + ONBOARDING
+// ========================================
 
-const STORAGE_KEY = "alexandria_user";
+// ---------- Screens ----------
 
-/* =======================================================
-   Helpers
-======================================================= */
+const loginScreen = document.getElementById("loginScreen");
+const onboardingScreen = document.getElementById("onboardingScreen");
+const dashboard = document.getElementById("dashboard");
 
-function saveUser(user){
+// ---------- State ----------
 
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(user)
-    );
+let profile = {
+    pregnant: false,
+    weeks: null,
+    children: []
+};
 
-}
+let xp = Number(localStorage.getItem("alex_xp")) || 0;
 
-function getUser(){
 
-    const data = localStorage.getItem(STORAGE_KEY);
-
-    if(!data) return null;
-
-    return JSON.parse(data);
-
-}
-
-function logout(){
-
-    localStorage.removeItem(STORAGE_KEY);
-
-    location.reload();
-
-}
-
-/* =======================================================
-   Default User
-======================================================= */
-
-function createEmptyUser(){
-
-    return{
-
-        logged:true,
-
-        email:"",
-
-        xp:0,
-
-        streak:0,
-
-        pregnant:false,
-
-        pregnancyWeek:null,
-
-        children:[],
-
-        badges:[],
-
-        completedToday:false
-
-    }
-
-}
-
-/* =======================================================
-   Login
-======================================================= */
+// ========================================
+// LOGIN
+// ========================================
 
 function login(){
 
-    const email=document
-        .getElementById("email")
-        .value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-    const password=document
-        .getElementById("password")
-        .value;
+    if(email.length < 4 || password.length < 4){
 
-    if(email==="" || password===""){
-
-        alert("Please enter email and password.");
-
+        alert("Please enter a valid email and password.");
         return;
 
     }
 
-    let user=createEmptyUser();
+    localStorage.setItem("alex_logged","true");
 
-    user.email=email;
+    if(localStorage.getItem("alex_profile")){
 
-    saveUser(user);
+        profile = JSON.parse(localStorage.getItem("alex_profile"));
 
-    openOnboarding();
+        showDashboard();
 
-}
+    }else{
 
-/* =======================================================
-   Initial Load
-======================================================= */
-
-window.onload=function(){
-
-    const user=getUser();
-
-    if(!user){
-
-        document
-            .getElementById("loginScreen")
-            .classList.remove("hidden");
-
-        return;
+        showOnboarding();
 
     }
 
-    if(user.children.length===0 && !user.pregnant){
+}
 
-        openOnboarding();
 
-        return;
+// ========================================
+// SCREENS
+// ========================================
 
+function showOnboarding(){
+
+    loginScreen.classList.add("hidden");
+    onboardingScreen.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+
+}
+
+function showDashboard(){
+
+    loginScreen.classList.add("hidden");
+    onboardingScreen.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+
+    updateXP();
+
+    if(typeof loadProfile === "function"){
+        loadProfile();
     }
 
-    openDashboard();
+    if(typeof loadInstitutions === "function"){
+        loadInstitutions();
+    }
+
+    showTab("today");
 
 }
 
-/* =======================================================
-   Screens
-======================================================= */
 
-function hideAllScreens(){
-
-    document
-        .getElementById("loginScreen")
-        .classList.add("hidden");
-
-    document
-        .getElementById("onboardingScreen")
-        .classList.add("hidden");
-
-    document
-        .getElementById("dashboard")
-        .classList.add("hidden");
-
-}
-
-function openOnboarding(){
-
-    hideAllScreens();
-
-    document
-        .getElementById("onboardingScreen")
-        .classList.remove("hidden");
-
-}
-
-function openDashboard(){
-
-    hideAllScreens();
-
-    document
-        .getElementById("dashboard")
-        .classList.remove("hidden");
-
-    loadDashboard();
-
-}
-
-/* =======================================================
-   Pregnancy
-======================================================= */
+// ========================================
+// PREGNANCY
+// ========================================
 
 function pregnantYes(){
+
+    profile.pregnant = true;
 
     document
         .getElementById("pregnancyQuestions")
@@ -188,6 +106,8 @@ function pregnantYes(){
 
 function pregnantNo(){
 
+    profile.pregnant = false;
+
     document
         .getElementById("childrenQuestions")
         .classList.remove("hidden");
@@ -198,51 +118,47 @@ function pregnantNo(){
 
 }
 
-/* =======================================================
-   Children
-======================================================= */
+
+// ========================================
+// CHILDREN
+// ========================================
 
 function createChildrenInputs(){
 
-    const total=parseInt(
-        document
-        .getElementById("childrenNumber")
-        .value
+    const quantity = Number(
+        document.getElementById("childrenNumber").value
     );
 
-    const div=document
-        .getElementById("childrenForms");
+    const container = document.getElementById("childrenForms");
 
-    div.innerHTML="";
+    container.innerHTML = "";
 
-    if(!total || total<=0){
+    if(quantity <= 0){
+
+        alert("Please enter at least one child.");
 
         return;
 
     }
 
-    for(let i=0;i<total;i++){
+    for(let i=0;i<quantity;i++){
 
-        div.innerHTML+=`
+        container.innerHTML += `
 
-        <div class="child-card">
+            <div class="child-card">
 
-            <h4>
+                <h4>Child ${i+1}</h4>
 
-                Child ${i+1}
+                <input
+                    id="child_name_${i}"
+                    placeholder="Name">
 
-            </h4>
+                <input
+                    id="child_age_${i}"
+                    type="number"
+                    placeholder="Age">
 
-            <input
-                id="childName${i}"
-                placeholder="Name">
-
-            <input
-                id="childAge${i}"
-                type="number"
-                placeholder="Age">
-
-        </div>
+            </div>
 
         `;
 
@@ -250,144 +166,108 @@ function createChildrenInputs(){
 
 }
 
-/* =======================================================
-   Finish Onboarding
-======================================================= */
+
+// ========================================
+// FINISH ONBOARDING
+// ========================================
 
 function finishOnboarding(){
 
-    let user=getUser();
+    profile.children = [];
 
-    if(!user){
+    if(profile.pregnant){
 
-        user=createEmptyUser();
-
-    }
-
-    const week=document
-        .getElementById("weeks")
-        .value;
-
-    if(week){
-
-        user.pregnant=true;
-
-        user.pregnancyWeek=parseInt(week);
+        profile.weeks = Number(
+            document.getElementById("weeks").value
+        ) || 0;
 
     }
 
-    const total=parseInt(
-        document
-        .getElementById("childrenNumber")
-        .value
-    );
+    const quantity =
+        Number(document.getElementById("childrenNumber").value) || 0;
 
-    user.children=[];
+    for(let i=0;i<quantity;i++){
 
-    if(total){
+        const name = document
+            .getElementById(`child_name_${i}`)
+            ?.value || "";
 
-        for(let i=0;i<total;i++){
-
-            const child={
-
-                name:document
-                    .getElementById(`childName${i}`)
-                    .value,
-
-                age:parseInt(
-
-                    document
-                    .getElementById(`childAge${i}`)
-                    .value
-
-                ),
-
-                xp:0
-
-            };
-
-            user.children.push(child);
-
-        }
-
-    }
-
-    saveUser(user);
-
-    openDashboard();
-
-}
-
-/* =======================================================
-   Navigation
-======================================================= */
-
-function showTab(tab){
-
-    document
-        .querySelectorAll(".tab")
-        .forEach(item=>{
-
-            item.classList.add("hidden");
-
-        });
-
-    document
-        .getElementById(tab)
-        .classList.remove("hidden");
-
-}
-// =========================
-// ONBOARDING
-// =========================
-
-const startBtn = document.getElementById("startBtn");
-
-startBtn.onclick = () => {
-
-    const profile = {
-        pregnant: document.querySelector('input[name="pregnant"]:checked')?.value || "no",
-        pregnancyWeeks: document.getElementById("pregnancyWeeks").value,
-        children: []
-    };
-
-    document.querySelectorAll(".child-card").forEach(card=>{
+        const age = Number(
+            document
+                .getElementById(`child_age_${i}`)
+                ?.value
+        ) || 0;
 
         profile.children.push({
 
-            name: card.querySelector(".child-name").value,
-            age: card.querySelector(".child-age").value
+            name,
+            age
 
         });
 
-    });
+    }
 
     localStorage.setItem(
+
         "alex_profile",
         JSON.stringify(profile)
+
     );
 
-    initializeDashboard(profile);
+    addXP(100);
 
-};
+    showDashboard();
+
+}
 
 
+// ========================================
+// XP
+// ========================================
 
-// =========================
-// LOAD USER
-// =========================
+function addXP(points){
 
-window.onload = ()=>{
+    xp += points;
+
+    localStorage.setItem(
+
+        "alex_xp",
+        xp
+
+    );
+
+    updateXP();
+
+}
+
+function updateXP(){
+
+    const xpElement = document.getElementById("xp");
+
+    if(xpElement){
+
+        xpElement.innerText = xp;
+
+    }
+
+}
+
+
+// ========================================
+// AUTO LOGIN
+// ========================================
+
+window.onload = () => {
 
     if(localStorage.getItem("alex_logged")){
 
-        const profile = JSON.parse(
-            localStorage.getItem("alex_profile")
-        );
+        const saved = localStorage.getItem("alex_profile");
 
-        if(profile){
+        if(saved){
 
-            initializeDashboard(profile);
+            profile = JSON.parse(saved);
+
+            showDashboard();
 
         }else{
 
@@ -398,300 +278,440 @@ window.onload = ()=>{
     }
 
 };
+// ========================================
+// PART 2 - DASHBOARD + DAILY PLAN
+// ========================================
 
 
+// ---------- Tabs ----------
 
+function showTab(tabName){
 
-// =========================
-// XP
-// =========================
+    document
+        .querySelectorAll(".tab")
+        .forEach(tab => tab.classList.add("hidden"));
 
-let xp = Number(localStorage.getItem("alex_xp")) || 0;
+    const tab = document.getElementById(tabName);
 
-function addXP(points){
+    if(tab){
 
-    xp += points;
-
-    localStorage.setItem("alex_xp",xp);
-
-    updateXP();
-
-}
-
-function updateXP(){
-
-    document.getElementById("xpValue").innerHTML = xp;
-
-}
-
-
-
-// =========================
-// DASHBOARD
-// =========================
-
-function initializeDashboard(profile){
-
-    onboarding.classList.add("hidden");
-
-    dashboard.classList.remove("hidden");
-
-    updateXP();
-
-    generateDailyPlan(profile);
-
-    generateInstitutions();
-
-}
-// =========================
-// DAILY PLAN
-// =========================
-
-function generateDailyPlan() {
-
-    const container = document.getElementById("dailyPlan");
-
-    container.innerHTML = "";
-
-    let plan = [];
-
-    children.forEach(child => {
-
-        if(child.age == 0){
-
-            plan.push({
-                child: child.name,
-                tasks:[
-                    "Read a short picture book (10 min)",
-                    "Tummy time",
-                    "Talk and sing during feeding"
-                ]
-            });
-
-        }else if(child.age <= 2){
-
-            plan.push({
-                child: child.name,
-                tasks:[
-                    "Read together",
-                    "Stack blocks",
-                    "Outdoor walk",
-                    "Name everyday objects"
-                ]
-            });
-
-        }else if(child.age <=4){
-
-            plan.push({
-                child: child.name,
-                tasks:[
-                    "Pretend play",
-                    "Read a story",
-                    "Count objects",
-                    "Nature walk"
-                ]
-            });
-
-        }else{
-
-            plan.push({
-                child: child.name,
-                tasks:[
-                    "Practice letters",
-                    "Drawing activity",
-                    "Bike or park",
-                    "Read for 15 minutes"
-                ]
-            });
-
-        }
-
-    });
-
-    if(plan.length == 0){
-
-        container.innerHTML = `
-            <p>Add your child first.</p>
-        `;
-
-        return;
+        tab.classList.remove("hidden");
 
     }
 
-    plan.forEach(p=>{
+}
 
-        let html = `
-        <div class="plan-card">
 
-            <h3>${p.child}</h3>
 
-        `;
+// ========================================
+// DAILY PLAN
+// ========================================
 
-        p.tasks.forEach(task=>{
+function generatePlan(){
 
-            html += `
-                <label class="task">
+    const mood =
+        document.getElementById("mood").value;
 
-                    <input type="checkbox">
+    const container =
+        document.getElementById("dailyPlan");
 
-                    ${task}
+    let html = "";
 
-                </label>
-            `;
+    html += `
+        <h2>Today's Personalized Plan</h2>
+    `;
 
-        });
+
+    // ================= Pregnancy =================
+
+    if(profile.pregnant){
 
         html += `
-            <button onclick="completeDay()">Complete Today (+50 XP)</button>
-        </div>
-        `;
 
-        container.innerHTML += html;
+        <div class="activity">
 
-    });
+            <h3>Pregnancy Care</h3>
 
-}
+            <ul>
 
+                <li>✔ Stay hydrated.</li>
 
-// =========================
-// COMPLETE DAY
-// =========================
+                <li>✔ Take a gentle 20 minute walk.</li>
 
-function completeDay(){
+                <li>✔ Eat iron-rich foods.</li>
 
-    xp += 50;
+                <li>✔ Rest whenever needed.</li>
 
-    saveXP();
+            </ul>
 
-    updateXP();
+            <a target="_blank"
+               href="https://www.nhs.uk/pregnancy/">
 
-    alert("Awesome! +50 XP earned 🎉");
+               NHS Pregnancy Guide
 
-}
-
-
-// =========================
-// NEARBY SERVICES
-// =========================
-
-const nearby = [
-
-    {
-        type:"Hospital",
-        name:"NHS Community Health Centre",
-        desc:"Pediatric consultations and vaccinations."
-    },
-
-    {
-        type:"NGO",
-        name:"Family Support Hub",
-        desc:"Parenting workshops and child development."
-    },
-
-    {
-        type:"Event",
-        name:"Storytelling Saturday",
-        desc:"Weekly reading activities for children."
-    },
-
-    {
-        type:"Park",
-        name:"Community Green Park",
-        desc:"Outdoor play and social interaction."
-    }
-
-];
-
-function renderNearby(){
-
-    const container = document.getElementById("nearbyList");
-
-    container.innerHTML = "";
-
-    nearby.forEach(item=>{
-
-        container.innerHTML += `
-
-        <div class="near-card">
-
-            <h3>${item.type}</h3>
-
-            <strong>${item.name}</strong>
-
-            <p>${item.desc}</p>
-
-            <button onclick="earnPartnerXP()">
-
-                I visited (+20 XP)
-
-            </button>
+            </a>
 
         </div>
 
         `;
 
-    });
-
-}
-
-function earnPartnerXP(){
-
-    xp += 20;
-
-    saveXP();
-
-    updateXP();
-
-}
-
-
-// =========================
-// NHS RESOURCES
-// =========================
-
-const resources = [
-
-    {
-        title:"Pregnancy",
-        url:"https://www.nhs.uk/pregnancy/"
-    },
-
-    {
-        title:"Baby",
-        url:"https://www.nhs.uk/start-for-life/"
-    },
-
-    {
-        title:"Child Development",
-        url:"https://www.nhs.uk/conditions/baby/"
-    },
-
-    {
-        title:"Vaccinations",
-        url:"https://www.nhs.uk/vaccinations/"
     }
 
-];
 
-function renderResources(){
 
-    const container = document.getElementById("resources");
+    // ================= Children =================
+
+    profile.children.forEach(child=>{
+
+        html += generateChildPlan(child,mood);
+
+    });
+
+
+    // ================= Checklist =================
+
+    html += `
+
+    <div class="activity">
+
+        <h3>Today's Checklist</h3>
+
+        <label>
+
+            <input type="checkbox"
+                   onchange="gainChecklistXP(this)">
+
+            Read together
+
+        </label>
+
+        <br><br>
+
+        <label>
+
+            <input type="checkbox"
+                   onchange="gainChecklistXP(this)">
+
+            Outdoor play
+
+        </label>
+
+        <br><br>
+
+        <label>
+
+            <input type="checkbox"
+                   onchange="gainChecklistXP(this)">
+
+            Healthy meal
+
+        </label>
+
+        <br><br>
+
+        <label>
+
+            <input type="checkbox"
+                   onchange="gainChecklistXP(this)">
+
+            Bedtime routine
+
+        </label>
+
+    </div>
+
+    `;
+
+
+    container.innerHTML = html;
+
+}
+
+
+
+// ========================================
+// CHILD PLAN
+// ========================================
+
+function generateChildPlan(child,mood){
+
+    let activities = [];
+
+
+    // Age recommendations
+
+    if(child.age < 1){
+
+        activities = [
+
+            "Tummy time",
+            "Talk to your baby",
+            "Skin-to-skin interaction"
+
+        ];
+
+    }
+
+    else if(child.age <=3){
+
+        activities = [
+
+            "Read one picture book",
+            "Stack blocks",
+            "Outdoor exploration"
+
+        ];
+
+    }
+
+    else{
+
+        activities = [
+
+            "Storytelling",
+            "Drawing together",
+            "Nature walk"
+
+        ];
+
+    }
+
+
+    // Mood adjustments
+
+    if(mood==="Sick"){
+
+        activities.push("Offer fluids frequently");
+        activities.push("Monitor temperature");
+
+    }
+
+    if(mood==="Tired"){
+
+        activities.push("Earlier bedtime");
+        activities.push("Quiet reading");
+
+    }
+
+    if(mood==="Energetic"){
+
+        activities.push("Park activities");
+        activities.push("Dance together");
+
+    }
+
+
+    return `
+
+    <div class="activity">
+
+        <h3>${child.name} (${child.age} years)</h3>
+
+        <ul>
+
+            ${activities.map(item=>`<li>✔ ${item}</li>`).join("")}
+
+        </ul>
+
+        <a target="_blank"
+           href="https://www.nhs.uk/start-for-life/baby/">
+
+           NHS Child Development
+
+        </a>
+
+    </div>
+
+    `;
+
+}
+
+
+
+// ========================================
+// CHECKLIST XP
+// ========================================
+
+function gainChecklistXP(box){
+
+    if(box.checked){
+
+        addXP(20);
+
+    }
+
+}
+// ========================================
+// PART 3 - PROFILE + COMMUNITY + LOGOUT
+// ========================================
+
+
+// ========================================
+// PROFILE
+// ========================================
+
+function loadProfile(){
+
+    const family = document.getElementById("family");
+
+    if(!family) return;
+
+    let html = "";
+
+    if(profile.pregnant){
+
+        html += `
+
+        <div class="activity">
+
+            <h3>🤰 Pregnancy</h3>
+
+            <p><strong>${profile.weeks}</strong> weeks</p>
+
+        </div>
+
+        `;
+
+    }
+
+    if(profile.children.length===0){
+
+        html += `
+
+        <div class="activity">
+
+            <p>No children registered yet.</p>
+
+        </div>
+
+        `;
+
+    }
+
+    profile.children.forEach(child=>{
+
+        html += `
+
+        <div class="activity">
+
+            <h3>${child.name}</h3>
+
+            <p>${child.age} years old</p>
+
+        </div>
+
+        `;
+
+    });
+
+    html += `
+
+    <div class="activity">
+
+        <h3>Total XP</h3>
+
+        <h2>${xp}</h2>
+
+    </div>
+
+    `;
+
+    family.innerHTML = html;
+
+}
+
+
+
+// ========================================
+// COMMUNITY
+// ========================================
+
+function loadInstitutions(){
+
+    const container =
+        document.getElementById("institutions");
 
     if(!container) return;
 
-    container.innerHTML = "";
+    const places=[
 
-    resources.forEach(r=>{
+        {
+
+            name:"NHS Children's Centre",
+
+            type:"Parenting Support",
+
+            xp:40,
+
+            link:"https://www.nhs.uk/start-for-life/"
+
+        },
+
+        {
+
+            name:"UNICEF Early Childhood",
+
+            type:"Family Resources",
+
+            xp:50,
+
+            link:"https://www.unicef.org/parenting"
+
+        },
+
+        {
+
+            name:"Local Pediatric Hospital",
+
+            type:"Healthcare",
+
+            xp:80,
+
+            link:"https://www.nhs.uk/"
+
+        },
+
+        {
+
+            name:"Community Reading Club",
+
+            type:"Weekly Event",
+
+            xp:25,
+
+            link:"https://www.booktrust.org.uk/"
+
+        }
+
+    ];
+
+    container.innerHTML="";
+
+    places.forEach(place=>{
 
         container.innerHTML += `
 
-        <div class="resource">
+        <div class="activity">
 
-            <h3>${r.title}</h3>
+            <h3>${place.name}</h3>
 
-            <a href="${r.url}" target="_blank">
+            <p>${place.type}</p>
 
-                Open NHS Guide →
+            <p>Reward: ${place.xp} XP</p>
+
+            <button onclick="visitPlace(${place.xp})">
+
+                Check-in
+
+            </button>
+
+            <br><br>
+
+            <a href="${place.link}"
+
+               target="_blank">
+
+               Learn more
 
             </a>
 
@@ -704,55 +724,69 @@ function renderResources(){
 }
 
 
-// =========================
-// TABS
-// =========================
 
-function showTab(tab){
+// ========================================
+// CHECK-IN
+// ========================================
 
-    document.querySelectorAll(".tab-content").forEach(el=>{
+function visitPlace(points){
 
-        el.classList.add("hidden");
+    addXP(points);
 
-    });
-
-    document.getElementById(tab).classList.remove("hidden");
+    alert("Thanks for participating! +" + points + " XP");
 
 }
 
 
-// =========================
-// INIT
-// =========================
 
-window.onload = () => {
+// ========================================
+// LOGOUT
+// ========================================
+
+function logout(){
+
+    localStorage.removeItem("alex_logged");
+
+    location.reload();
+
+}
+
+
+
+// ========================================
+// RESET (useful while testing)
+// ========================================
+
+function resetPrototype(){
+
+    localStorage.clear();
+
+    location.reload();
+
+}
+
+
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
+document.addEventListener("DOMContentLoaded",()=>{
 
     updateXP();
 
-    if(localStorage.getItem("alex_logged")){
+    if(localStorage.getItem("alex_profile")){
 
-        if(localStorage.getItem("alex_profile")){
+        profile = JSON.parse(
 
-            loginPage.classList.add("hidden");
+            localStorage.getItem("alex_profile")
 
-            onboarding.classList.add("hidden");
-
-            dashboard.classList.remove("hidden");
-
-        }else{
-
-            showOnboarding();
-
-        }
+        );
 
     }
 
-    loadChildren();
+    loadProfile();
 
-    generateDailyPlan();
+    loadInstitutions();
 
-    renderNearby();
-
-    renderResources();
-
-};
+});
